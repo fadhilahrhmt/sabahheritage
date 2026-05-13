@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sabah Heritage | Digital Experience</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #080808;
+            --text-color: #ffffff;
+            --accent-color: #c5a059;
+            --font-main: 'Space Mono', monospace;
+            --font-heading: 'Syncopate', sans-serif;
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+        }
+
+        /* UPDATED: Changed overflow to allow vertical scrolling */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            overflow-x: hidden; 
+            scroll-behavior: smooth;
+        }
+
+        /* 1. CUSTOM CURSOR */
+        #cursor {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.15s ease-out;
+        }
+
+        #cursor-follower {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent-color);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.3;
+            transition: transform 0.3s ease-out, left 0.1s linear, top 0.1s linear;
+        }
+
+        /* 2. SUBTLE BORNEO PATTERN */
+        .pattern-layer {
+            position: fixed;
+            inset: 0;
+            background: 
+                conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 90%, rgba(197, 160, 89, 0.05) 90.1deg, rgba(197, 160, 89, 0.05) 100deg),
+                conic-gradient(from 180deg at 50% 50%, transparent 0deg, transparent 90%, rgba(197, 160, 89, 0.05) 90.1deg, rgba(197, 160, 89, 0.05) 100deg);
+            background-size: 60px 60px;
+            opacity: 0.4;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 3. THE "ACTIVE THEORY" REVEAL LIGHT */
+        .flashlight-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(
+                circle 500px at var(--mouse-x) var(--mouse-y), 
+                rgba(8, 8, 8, 0) 0%, 
+                rgba(8, 8, 8, 0.95) 100%
+            );
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* 4. CONTENT LAYOUT */
+        .site-header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 50px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .logo-box {
+            font-family: var(--font-heading);
+            font-size: 10px;
+            letter-spacing: 0.5em;
+            line-height: 2;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: right;
+        }
+
+        .nav-links a {
+            font-size: 9px;
+            text-decoration: none;
+            color: var(--text-color);
+            letter-spacing: 3px;
+            opacity: 0.4;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover { opacity: 1; color: var(--accent-color); }
+
+        .hero-main {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            perspective: 1000px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-title {
+            font-family: var(--font-heading);
+            font-size: clamp(3rem, 12vw, 9rem);
+            font-weight: 700;
+            line-height: 0.85;
+            margin-bottom: 30px;
+            transition: transform 0.1s ease-out;
+        }
+
+        .hero-title span {
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+            display: block;
+        }
+
+        .hero-description {
+            max-width: 500px;
+            margin: 0 auto;
+            font-size: 11px;
+            line-height: 2.2;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        /* 5. INTERACTIVE BUTTON */
+        .cta-wrapper {
+            margin-top: 50px;
+        }
+
+        .cta-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 20px 50px;
+            color: white;
+            font-family: var(--font-main);
+            font-size: 10px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            position: relative;
+            z-index: 101; /* Ensure it stays above overlays */
+        }
+
+        .cta-btn:hover {
+            background: white;
+            color: black;
+            border-color: white;
+            transform: translateY(-5px);
+        }
+
+        /* NEW: VIDEO SECTION STYLES */
+        .video-section {
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-section iframe {
+            width: 100vw;
+            height: 56.25vw; /* 16:9 aspect ratio */
+            min-height: 100vh;
+            min-width: 177.77vh; /* 16:9 aspect ratio */
+            pointer-events: none; /* Prevents cursor interference */
+        }
+
+        /* 6. UI NOISE AND TEXTURE */
+        .grain {
+            position: fixed;
+            inset: 0;
+            z-index: 99;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        .bottom-ui {
+            position: fixed;
+            bottom: 40px;
+            width: calc(100% - 100px);
+            left: 50px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            letter-spacing: 4px;
+            opacity: 0.3;
+            z-index: 100;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div class="grain"></div>
+    <div class="pattern-layer"></div>
+    <div class="flashlight-overlay" id="flashlight"></div>
+
+    <header class="site-header">
+        <div class="logo-box">
+            SABAH<br>HERITAGE<br>
+        </div>
+        <nav class="nav-links">
+            <a href="#">HOME</a>
+            <a href="explore.html">EXPLORE</a>
+            <a href="gallery.html">GALLERY</a>
+            <a href="game.html">GAME</a>
+            <a href="about.html">ABOUT</a>
+        </nav>
+    </header>
+
+    <main class="hero-main">
+        <h1 class="hero-title" id="tilt-text">
+            <span>DISCOVER</span>
+            BORNEO
+        </h1>
+        <p class="hero-description">
+            A visual exploration into the heart of North Borneo's Heritage.
+        </p>
+        <div class="cta-wrapper">
+            <button class="cta-btn" id="initiate-btn">Initiate Experience</button>
+        </div>
+    </main>
+
+    <section class="video-section" id="video-experience">
+        <iframe 
+            id="experience-video"
+            src="https://www.youtube.com/embed/P5zfmgTXf5Y?enablejsapi=1&autoplay=0&mute=1&controls=0&loop=1&playlist=P5zfmgTXf5Y" 
+            frameborder="0" 
+            allow="autoplay; encrypted-media" 
+            allowfullscreen>
+        </iframe>
+    </section>
+
+    <div class="bottom-ui">
+        <div>TRACK_ID: 2026</div>
+        <div id="timer">00:00:00:00</div>
+    </div>
+    console.log("The script is actually running!");
+alert("If you see this, JavaScript is working!");
+
+    <script>
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        const flashlight = document.getElementById('flashlight');
+        const tiltText = document.getElementById('tilt-text');
+        const initiateBtn = document.getElementById('initiate-btn');
+        const videoSection = document.getElementById('video-experience');
+        const videoIframe = document.getElementById('experience-video');
+
+        // Main Mouse Interaction
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+
+            cursor.style.left = x + 'px';
+            cursor.style.top = y + 'px';
+            
+            follower.style.left = (x - 20) + 'px';
+            follower.style.top = (y - 20) + 'px';
+
+            document.documentElement.style.setProperty('--mouse-x', x + 'px');
+            document.documentElement.style.setProperty('--mouse-y', y + 'px');
+
+            const rotateX = (window.innerHeight / 2 - y) / 25;
+            const rotateY = (window.innerWidth / 2 - x) / 25;
+            tiltText.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        // NEW: Scroll and Play logic
+        initiateBtn.addEventListener('click', () => {
+            // Scroll to video
+            videoSection.scrollIntoView({ behavior: 'smooth' });
+            
+            // Send play command to YouTube Iframe API
+            // We append autoplay=1 to the src to trigger playback on click
+            const currentSrc = videoIframe.src;
+            if (!currentSrc.includes('autoplay=1')) {
+                videoIframe.src = currentSrc.replace('autoplay=0', 'autoplay=1');
+            }
+        });
+
+        // Button Hover Effects
+        const buttons = document.querySelectorAll('button, a');
+        buttons.forEach(btn => {
+            btn.onmouseenter = () => {
+                follower.style.transform = 'scale(2)';
+                follower.style.background = 'rgba(197, 160, 89, 0.1)';
+            };
+            btn.onmouseleave = () => {
+                follower.style.transform = 'scale(1)';
+                follower.style.background = 'transparent';
+            };
+        });
+
+        function updateTimer() {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                          now.getMinutes().toString().padStart(2, '0') + ":" + 
+                          now.getSeconds().toString().padStart(2, '0') + ":" + 
+                          Math.floor(Math.random() * 99).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = "DATA_LOG: " + timeStr;
+        }
+        setInterval(updateTimer, 50);
+
+    </script>
+</body>
+</html>
