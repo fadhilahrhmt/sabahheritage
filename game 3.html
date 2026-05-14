@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SABAH_ARCHIVE | Dressing Protocol</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #080808;
+            --surface: rgba(255, 255, 255, 0.03);
+            --text-color: #ffffff;
+            --accent-color: #d4af37; 
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --font-main: 'Space Mono', monospace;
+            --font-heading: 'Syncopate', sans-serif;
+            --overlay-bg: rgba(0, 0, 0, 0.98);
+            --error-red: #ff4444;
+            --success-green: #00ff00;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f4f4f2;
+            --surface: rgba(0, 0, 0, 0.04);
+            --text-color: #1a1a1a;
+            --accent-color: #b8860b; 
+            --glass-border: rgba(0, 0, 0, 0.15);
+            --overlay-bg: rgba(244, 244, 242, 0.98);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.4s ease;
+        }
+
+        /* --- NAVIGATION --- */
+        .site-nav {
+            position: fixed; top: 0; width: 100%; height: 80px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 50px; background: var(--bg-color); border-bottom: 1px solid var(--glass-border);
+            z-index: 5000; transition: background-color 0.4s ease;
+        }
+
+        .logo-box h1 { font-family: var(--font-heading); font-size: 14px; letter-spacing: 4px; }
+        .nav-menu { display: flex; gap: 30px; list-style: none; }
+        .nav-menu a { 
+            color: var(--text-color); text-decoration: none; font-size: 11px; 
+            opacity: 0.6; transition: 0.3s; text-transform: uppercase; font-weight: 700;
+        }
+        .nav-menu a.active, .nav-menu a:hover { opacity: 1; color: var(--accent-color); }
+
+        .nav-right { display: flex; align-items: center; gap: 20px; }
+        #theme-toggle {
+            background: transparent; border: 1px solid var(--glass-border);
+            color: var(--text-color); font-family: var(--font-main); font-size: 9px;
+            padding: 6px 12px; letter-spacing: 1px;
+        }
+        #digital-clock { font-size: 12px; font-weight: 700; color: var(--accent-color); border-left: 1px solid var(--glass-border); padding-left: 20px; }
+
+        /* --- UTILS --- */
+        .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(var(--glass-border) 1px, transparent 1px), linear-gradient(90deg, var(--glass-border) 1px, transparent 1px); background-size: 50px 50px; z-index: -1; opacity: 0.1; }
+        #cursor { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; position: fixed; pointer-events: none; z-index: 7000; }
+        #cursor-follower { width: 40px; height: 40px; border: 1px solid var(--accent-color); border-radius: 50%; position: fixed; pointer-events: none; z-index: 6999; transition: 0.1s linear; }
+
+        /* --- GAME ENGINE LAYOUT --- */
+        .game-container {
+            display: flex; width: 100%; max-width: 1600px;
+            margin: 80px auto 0; padding: 30px 50px; gap: 20px;
+            flex: 1; min-height: 0; position: relative; z-index: 10;
+        }
+
+        .wardrobe-section {
+            flex: 1.4; background: var(--surface); border: 1px solid var(--glass-border);
+            padding: 20px; display: flex; flex-direction: column; overflow-y: auto;
+        }
+
+        .quest-hud {
+            width: 100%; border: 1px solid var(--accent-color); padding: 15px;
+            margin-bottom: 25px; text-align: center; background: rgba(212, 175, 55, 0.05);
+        }
+        .quest-hud h3 { font-family: var(--font-heading); font-size: 10px; color: var(--accent-color); letter-spacing: 2px; }
+        #game-timer { font-size: 14px; font-weight: 700; margin-top: 5px; display: block; }
+
+        .category-label { font-size: 9px; letter-spacing: 3px; color: var(--accent-color); opacity: 0.7; margin-bottom: 10px; display: block; }
+        .slider-wrapper { display: flex; gap: 15px; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--glass-border); }
+
+        .item-card {
+            flex: 0 0 110px; height: 110px; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .item-card:hover { border-color: var(--accent-color); background: rgba(212, 175, 55, 0.1); }
+        .item-card.active { border: 2px solid var(--accent-color); background: rgba(212, 175, 55, 0.15); }
+        .item-card img { max-width: 80%; max-height: 80%; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); }
+
+        .display-column { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .character-chamber {
+            width: 100%; max-width: 380px; height: 520px;
+            border: 1px solid var(--glass-border); position: relative;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+            display: flex; flex-direction: column; padding: 20px;
+        }
+        .slot { flex: 1; border: 1px dashed var(--glass-border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .clothing-layer { height: 90%; object-fit: contain; display: none; }
+
+        /* --- SCORING BOARD --- */
+        .marks-board { flex: 0.8; border: 1px solid var(--glass-border); background: var(--surface); padding: 25px; display: flex; flex-direction: column; }
+        .marks-board h3 { font-family: var(--font-heading); font-size: 10px; letter-spacing: 2px; margin-bottom: 20px; color: var(--accent-color); text-align: center;}
+        
+        #leaderboard { flex-grow: 1; overflow-y: auto; margin-bottom: 20px; }
+        .log-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--glass-border); font-size: 11px; }
+        .log-row.top { color: var(--accent-color); font-weight: 700; border-bottom: 1px solid var(--accent-color); }
+
+        .board-controls { display: flex; flex-direction: column; gap: 10px; }
+
+        .action-btn {
+            background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color);
+            padding: 15px; font-family: var(--font-main); font-size: 10px; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase; transition: 0.3s; width: 100%; text-decoration: none; display: block; text-align: center;
+        }
+        .action-btn:hover { background: var(--accent-color); color: var(--bg-color); }
+        .btn-secondary { border-color: var(--glass-border); color: var(--text-color); opacity: 0.6; }
+
+        /* --- OVERLAYS --- */
+        .overlay { position: fixed; inset: 0; background: var(--overlay-bg); z-index: 6000; display: none; justify-content: center; align-items: center; }
+        .modal { border: 1px solid var(--accent-color); padding: 60px; text-align: center; max-width: 500px; background: var(--bg-color); }
+        .modal.error-modal { border-color: var(--error-red); }
+        
+        input#player-name {
+            background: var(--surface); border: 1px solid var(--accent-color); color: var(--text-color);
+            padding: 15px; width: 100%; margin-bottom: 20px; text-align: center;
+            font-family: var(--font-main); font-size: 14px; outline: none;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div class="grid-bg"></div>
+
+    <nav class="site-nav">
+        <div class="logo-box"><h1>SABAH_ARCHIVE</h1></div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="explore.html">Explore</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="#" class="active">Game</a></li>
+            <li><a href="about.html">About</a></li>
+        </ul>
+        <div class="nav-right">
+            <button id="theme-toggle" onclick="toggleTheme()">MODE: DARK</button>
+            <div id="digital-clock">00:00:00</div>
+        </div>
+    </nav>
+
+    <main class="game-container">
+        <div class="wardrobe-section">
+            <div class="quest-hud">
+                <h3 id="quest-text">INITIALIZING_QUEST...</h3>
+                <span id="game-timer">0.00S</span>
+            </div>
+            
+            <span class="category-label">// HEADGEAR_DATA</span>
+            <div class="slider-wrapper" id="head-slider"></div>
+            <span class="category-label">// UPPER_BODY_DATA</span>
+            <div class="slider-wrapper" id="top-slider"></div>
+            <span class="category-label">// LOWER_BODY_DATA</span>
+            <div class="slider-wrapper" id="bottom-slider"></div>
+        </div>
+
+        <div class="display-column">
+            <div class="character-chamber">
+                <div class="slot"><img id="wear-head" class="clothing-layer"></div>
+                <div class="slot"><img id="wear-top" class="clothing-layer"></div>
+                <div class="slot"><img id="wear-bottom" class="clothing-layer"></div>
+            </div>
+            <button class="action-btn" style="max-width: 380px;" onclick="checkOutfit()">VERIFY_INTEGRITY</button>
+        </div>
+
+        <div class="marks-board">
+            <h3>// SYSTEM_RECORDS</h3>
+            <div id="leaderboard"></div>
+            
+            <div class="board-controls">
+                <button class="action-btn" onclick="startGameNow()">RE_INITIALIZE_SIM</button>
+                <a href="game.html" class="action-btn btn-secondary">MAIN_MENU</a>
+            </div>
+        </div>
+    </main>
+
+    <div id="intro-overlay" class="overlay" style="display:flex;">
+        <div class="modal">
+            <h2 style="font-family: var(--font-heading); font-size: 18px; color: var(--accent-color);">PROTOCOL: WOVEN ROOTS</h2>
+            <p style="font-size: 11px; opacity: 0.6; margin: 20px 0 30px;">Assemble attire to match the profile. To enter the top 5 records, speed is essential.</p>
+            <button class="action-btn" onclick="startGameNow()">START_SIMULATION</button>
+        </div>
+    </div>
+
+    <div id="wrong-overlay" class="overlay">
+        <div class="modal error-modal">
+            <h2 style="color: var(--error-red); font-family: var(--font-heading); margin-bottom: 20px;">YOU ARE WRONG!</h2>
+            <p style="font-size: 11px; opacity: 0.6; margin-bottom: 30px;">OUTSIDE_TRIBAL_PARAMETERS: Verification Failed.</p>
+            <div class="btn-group">
+                <button class="action-btn" onclick="closeWrongOverlay()">TRY AGAIN</button>
+                <a href="game.html" class="action-btn btn-secondary">MAIN_MENU</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-overlay" class="overlay">
+        <div class="modal">
+            <h2 id="win-status" style="color: var(--success-green); font-family: var(--font-heading);">// SYNC_COMPLETE</h2>
+            <p id="win-msg" style="margin: 20px 0;">Archival integrity restored.</p>
+            
+            <div id="record-entry" style="display:none;">
+                <p style="color: var(--accent-color); font-weight: bold; font-size: 10px; margin-bottom: 10px;">[NEW_TOP_5_RECORD_DETECTED]</p>
+                <input type="text" id="player-name" placeholder="ENTER_ARCHIVIST_ID" maxlength="12">
+                <div class="btn-group">
+                    <button class="action-btn" onclick="submitName()">COMMIT_TO_LOGS</button>
+                    <a href="game.html" class="action-btn btn-secondary">MAIN_MENU</a>
+                </div>
+            </div>
+
+            <div id="standard-retry" style="display:none;">
+                <div class="btn-group">
+                    <button class="action-btn" onclick="startGameNow()">PLAY AGAIN</button>
+                    <a href="game.html" class="action-btn btn-secondary">MAIN_MENU</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const itemData = [
+            { id:1, type:'head', tribe:'Kadazan', gender:'Female', img:'siung.png' },
+            { id:2, type:'head', tribe:'Bajau', gender:'Female', img:'sarimpak.jpg' },
+            { id:3, type:'head', tribe:'Murut', gender:'Female', img:'sinikot.jpg' },
+            { id:4, type:'top', tribe:'Kadazan', gender:'Female', img:'sinuangga.png' },
+            { id:5, type:'top', tribe:'Bajau', gender:'Female', img:'badu simpak.png' },
+            { id:6, type:'top', tribe:'Murut', gender:'Female', img:'pinongkoloh.jpg' },
+            { id:7, type:'bottom', tribe:'Kadazan', gender:'Female', img:'tapi.png' },
+            { id:8, type:'bottom', tribe:'Bajau', gender:'Female', img:'olos.png' },
+            { id:9, type:'bottom', tribe:'Murut', gender:'Female', img:'murut tapi.png' },
+            { id:10, type:'head', tribe:'Kadazan', gender:'Male', img:'sigar.jpg' },
+            { id:11, type:'head', tribe:'Bajau', gender:'Male', img:'dastar.jpg' },
+            { id:12, type:'head', tribe:'Murut', gender:'Male', img:'tupi sinulatan.jpg' },
+            { id:13, type:'top', tribe:'Kadazan', gender:'Male', img:'gaung.png' },
+            { id:14, type:'top', tribe:'Bajau', gender:'Male', img:'badu sampit.jpg' },
+            { id:15, type:'top', tribe:'Murut', gender:'Male', img:'babaru puputul.png' },
+            { id:16, type:'bottom', tribe:'Kadazan', gender:'Male', img:'suar.png' },
+            { id:17, type:'bottom', tribe:'Bajau', gender:'Male', img:'seluar.png' },
+            { id:18, type:'bottom', tribe:'Murut', gender:'Male', img:'aba puputul.png' }
+        ];
+
+        let currentQuest = {}, selection = { head: null, top: null, bottom: null };
+        let startTime = 0, timerInterval, recentTime = 0;
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('theme-toggle');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                btn.innerText = "MODE: LIGHT";
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                btn.innerText = "MODE: DARK";
+            }
+        }
+
+        setInterval(() => {
+            const clock = document.getElementById('digital-clock');
+            if(clock) clock.innerText = new Date().toLocaleTimeString('en-GB', { hour12: false });
+        }, 1000);
+
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+            follower.style.left = (e.clientX - 20) + 'px'; follower.style.top = (e.clientY - 20) + 'px';
+        });
+
+        function startGameNow() {
+            document.querySelectorAll('.overlay').forEach(o => o.style.display = 'none');
+            resetQuest();
+            startTimer();
+        }
+
+        function startTimer() {
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                recentTime = ((Date.now() - startTime) / 1000).toFixed(2);
+                document.getElementById('game-timer').innerText = recentTime + 'S';
+            }, 100);
+        }
+
+        function resetQuest() {
+            const tribes = ["Kadazan", "Murut", "Bajau"];
+            const genders = ["Male", "Female"];
+            currentQuest = { tribe: tribes[Math.floor(Math.random() * 3)], gender: genders[Math.floor(Math.random() * 2)] };
+            document.getElementById('quest-text').innerText = `PROFILE: ${currentQuest.gender.toUpperCase()} ${currentQuest.tribe.toUpperCase()}`;
+            selection = { head: null, top: null, bottom: null };
+            document.querySelectorAll('.clothing-layer').forEach(l => { l.style.display = 'none'; l.src = ""; });
+            loadWardrobe();
+        }
+
+        function loadWardrobe() {
+            ['head', 'top', 'bottom'].forEach(cat => {
+                const slider = document.getElementById(`${cat}-slider`);
+                slider.innerHTML = '';
+                itemData.filter(i => i.type === cat && i.gender === currentQuest.gender).forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `<img src="${item.img}">`;
+                    card.onclick = () => {
+                        document.querySelectorAll(`#${cat}-slider .item-card`).forEach(c => c.classList.remove('active'));
+                        card.classList.add('active');
+                        const layer = document.getElementById(`wear-${cat}`);
+                        layer.src = item.img; layer.style.display = 'block';
+                        selection[cat] = item;
+                    };
+                    slider.appendChild(card);
+                });
+            });
+        }
+
+        function checkOutfit() {
+            if (!selection.head || !selection.top || !selection.bottom) return;
+            const isMatch = selection.head.tribe === currentQuest.tribe && selection.top.tribe === currentQuest.tribe && selection.bottom.tribe === currentQuest.tribe;
+            
+            if (isMatch) {
+                clearInterval(timerInterval);
+                const finalTime = parseFloat(recentTime);
+                let scores = JSON.parse(localStorage.getItem('dressScores')) || [];
+                const isTop5 = scores.length < 5 || finalTime < (scores.length > 0 ? scores[scores.length - 1].time : 9999);
+
+                document.getElementById('win-overlay').style.display = 'flex';
+                if(isTop5) {
+                    document.getElementById('record-entry').style.display = 'block';
+                    document.getElementById('standard-retry').style.display = 'none';
+                } else {
+                    document.getElementById('record-entry').style.display = 'none';
+                    document.getElementById('standard-retry').style.display = 'block';
+                }
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            } else {
+                document.getElementById('wrong-overlay').style.display = 'flex';
+            }
+        }
+
+        function closeWrongOverlay() {
+            document.getElementById('wrong-overlay').style.display = 'none';
+        }
+
+        function submitName() {
+            const nameInput = document.getElementById('player-name');
+            const name = nameInput.value || "ANON_ARCHIVIST";
+            let scores = JSON.parse(localStorage.getItem('dressScores')) || [];
+            scores.push({ name, time: parseFloat(recentTime) });
+            scores.sort((a, b) => a.time - b.time);
+            localStorage.setItem('dressScores', JSON.stringify(scores.slice(0, 5)));
+            
+            nameInput.value = '';
+            document.getElementById('record-entry').style.display = 'none';
+            document.getElementById('standard-retry').style.display = 'block';
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            let scores = JSON.parse(localStorage.getItem('dressScores')) || [];
+            const container = document.getElementById('leaderboard');
+            if(container) {
+                container.innerHTML = scores.map((s, i) => `
+                    <div class="log-row ${i===0?'top':''}">
+                        <span>${i+1}. ${s.name.toUpperCase()}</span>
+                        <span>${s.time}S</span>
+                    </div>
+                `).join('') || "<p style='text-align:center; padding-top:40px; opacity:0.3; font-size:10px;'>NO_RECORDS_FOUND</p>";
+            }
+        }
+
+        window.onload = updateLeaderboard;
+    </script>
+</body>
+</html>

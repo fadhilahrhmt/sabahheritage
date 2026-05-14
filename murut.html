@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SABAH HERITAGE // MURUT_HISTORY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #ffffff;
+            --accent-gold: #d4af37;
+            --nav-bg: rgba(10, 10, 10, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f2f2f2;
+            --text-color: #0a0a0a;
+            --nav-bg: rgba(242, 242, 242, 0.9);
+            --glass-bg: rgba(0, 0, 0, 0.05);
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Space Mono', monospace;
+            line-height: 1.6;
+            transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-x: hidden;
+        }
+
+        /* CURSOR */
+        #custom-cursor {
+            width: 10px; height: 10px;
+            background-color: var(--accent-gold);
+            border-radius: 50%;
+            position: fixed; pointer-events: none;
+            z-index: 99999; transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+
+        #cursor-follower {
+            width: 40px; height: 40px;
+            border: 1px solid var(--accent-gold);
+            border-radius: 50%;
+            position: fixed; pointer-events: none;
+            z-index: 99998; transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+            opacity: 0.5;
+        }
+
+        /* NAVIGATION */
+        .site-header {
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 60px;
+            border-bottom: 1px solid var(--glass-border);
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            position: fixed;
+            top: 0; width: 100%;
+            z-index: 5000;
+        }
+
+        .main-nav { display: flex; gap: 5px; }
+        .nav-btn {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 10px 25px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            transition: 0.3s;
+        }
+        .nav-btn:hover, .nav-btn.active { color: var(--accent-gold); }
+
+        .mode-swap {
+            position: absolute; right: 60px;
+            font-size: 10px; letter-spacing: 2px;
+            color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 5px 15px; transition: 0.3s;
+        }
+
+        /* CONTENT */
+        .content {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 160px 60px 80px;
+        }
+
+        .tribe-title {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            text-align: center;
+            letter-spacing: 15px;
+            margin-bottom: 80px;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+        }
+
+        /* SHARED GRID STYLE */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 120px;
+            align-items: center;
+        }
+
+        .text-box {
+            padding: 40px;
+            border-left: 1px solid var(--accent-gold);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .section-tag {
+            color: var(--accent-gold);
+            font-size: 9px;
+            letter-spacing: 5px;
+            display: block;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .text-box h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .text-box p {
+            font-size: 12px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        .visual-frame {
+            width: 100%;
+            height: 450px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .visual-frame img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: grayscale(1) brightness(0.7);
+            transition: 1s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        .visual-frame:hover img {
+            filter: grayscale(0) brightness(1);
+            transform: scale(1.05);
+        }
+        /* ATTIRE EXPLANATION BOXES */
+        .attire-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        .spec-box {
+            padding: 30px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-top: 3px solid var(--accent-gold);
+        }
+
+        .spec-box h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--accent-gold);
+            font-size: 14px;
+            letter-spacing: 4px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .spec-box p {
+            font-size: 11px;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            text-transform: uppercase;
+        }
+
+        /* SLIDERS */
+        .slider-section-label {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 8px;
+            margin-bottom: 40px;
+            color: var(--accent-gold);
+        }
+
+        .slider-area {
+            position: relative;
+            margin-bottom: 120px;
+        }
+
+        .gallery-viewport {
+            overflow: hidden;
+            padding: 20px 0;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+
+        .gallery-track {
+            display: flex;
+            gap: 20px;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* ARTIFACT CARDS */
+        .item-card {
+            flex: 0 0 300px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            text-align: center;
+            transition: 0.4s;
+        }
+
+        .item-card:hover { border-color: var(--accent-gold); transform: translateY(-10px); }
+
+        .item-frame {
+            width: 100%; height: 300px;
+            overflow: hidden; background: #000;
+            margin-bottom: 20px;
+        }
+
+        .item-frame img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); transition: 0.5s; }
+        .item-card:hover img { filter: grayscale(0); transform: scale(1.1); }
+
+        /* VIDEO CARDS */
+        .video-card {
+            flex: 0 0 450px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 50px; height: 50px; background: transparent;
+            color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            font-family: 'Space Mono'; z-index: 100;
+        }
+        .arrow:hover { background: var(--accent-gold); color: #000; }
+        .arrow-left { left: -70px; }
+        .arrow-right { right: -70px; }
+
+        .bottom-area { text-align: center; padding: 60px 0; }
+        .action-btn {
+            background: transparent; color: var(--accent-gold);
+            padding: 20px 50px; border: 1px solid var(--accent-gold);
+            font-family: 'Space Mono'; letter-spacing: 5px;
+            text-transform: uppercase; font-size: 12px;
+        }
+        .action-btn:hover { background: var(--accent-gold); color: #000; }
+
+        @media (max-width: 1100px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .arrow { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="custom-cursor"></div>
+<div id="cursor-follower"></div>
+
+<header class="site-header">
+    <nav class="main-nav">
+        <a href="index.html" class="nav-btn">Home</a>
+        <a href="explore.html" class="nav-btn">Explore</a>
+        <a href="gallery.html" class="nav-btn active">Gallery</a>
+        <a href="game.html" class="nav-btn">Game</a>
+        <a href="about.html" class="nav-btn">About</a>
+    </nav>
+    <div class="mode-swap" onclick="toggleTheme()">MODE_SWAP</div>
+</header>
+
+<main class="content">
+    <h1 class="tribe-title">Murut_History</h1>
+
+    <div class="info-grid">
+        <div class="visual-frame">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZmvZuJTv-YVZImZd-ec0eDh7Q1lZ8mYeDQEMvmtrjafTdCchRl894gMrACuFiFWgtbCeBPEk6Dvts-_KXm8StnuCGmjiEbM6cWsCNEEs7w_UukHfkCsWVwDheAri1br-dq_zABaz5WmC8/s1600/1666069469361424-0.png" alt="Ancestral Roots">
+        </div>
+        <div class="text-box">
+            <span class="section-tag">Log_01 // Origins</span>
+            <h2>The Hill People</h2>
+            <p> The Murut are one of the major indigenous ethnic groups in Sabah. Traditionally, the Murut people lived in the inland and mountainous areas of Sabah, especially around Keningau, Tenom, Pensiangan, and Nabawan. The word “Murut” means “hill people” or “people of the interior.”
+                The Murut community is known for its rich cultural heritage, traditional longhouses, colorful clothing, beadwork, music, and warrior traditions. In the past, they were skilled hunters and farmers who depended on nature for their daily lives.</p>
+        </div>
+    </div>
+
+    <div class="info-grid" style="direction: rtl;">
+        <div class="visual-frame" style="direction: ltr;">
+            <img src="https://www.sabahpost.net/wp-content/uploads/2019/03/D_060517.jpg" alt="Spiritual Rites">
+        </div>
+        <div class="text-box" style="direction: ltr;">
+            <span class="section-tag">Log_02 // Hill People</span>
+            <h2>The Lifestyle</h2>
+            <p>"Traditionally, the Murut people lived in longhouses built using bamboo and wood. A longhouse could accommodate several families living together as a community. Farming, especially hill paddy cultivation, was an important part of their lifestyle.
+                The Murut people also used bamboo in many aspects of life, including cooking, crafting tools, musical instruments, and building houses.”
+            </p>
+            </div>
+
+    </div>
+    <div class="attire-specs">
+        <div class="spec-box">
+            <h3>[ MENS_ATTIRE ]</h3>
+            <p> The traditional attire for Murut men is a powerful reflection of their warrior heritage and deep connection to the forest, defined by garments crafted from natural materials and intricate symbolic details. The ensemble features the Babaru Puputul, a sleeveless jacket made from processed tapa bark, paired with the Aba Puputul, a matching bark loincloth that serves as the traditional lower garment. To complete the silhouette, men wear the Tupi Sinulatan, a distinctive headgear adorned with the majestic feathers of the Argus pheasant or hornbill, which historically signified the wearer's bravery and social status within the tribe.</p>
+        </div>
+        <div class="spec-box">
+            <h3>[ WOMENS_ATTIRE ]</h3>
+            <p>for the Murut women, the traditional attire is specifically known as the Pinongkolo, consisting of a sleeveless black cotton blouse and a long wrap-around skirt. These garments are meticulously embellished with tiny, colorful beads arranged in ancient geometric motifs like the tina-uh (bamboo shoots) and linangkit (embroidery), which represent forest spirits and ancestral folklore. The silhouette is anchored by the Pipirot, a heavy ceremonial belt made from rows of silver coins and strands of red, yellow, and white beads that signify wealth and status. To finish the ensemble, women wear the Sinikot, a set of three elaborate hairpins often linked by silver chains that secure the hair in a traditional bun and symbolize the beauty of the Murut spirit.
+        </div>
+    </div>
+
+    <h2 class="slider-section-label">TRIBAL_ARCHIVE</h2>
+    <div class="slider-area">
+        <button class="arrow arrow-left" onclick="moveSlide('artifact-track', -1)">PREV</button>
+        <div class="gallery-viewport">
+            <div class="gallery-track" id="artifact-track">
+                <div class="item-card"><div class="item-frame"><img src="pinongkoloh.jpg"></div><div class="oval-label">Pinongkoloh</div></div>
+                <div class="item-card"><div class="item-frame"><img src="lumpirot.png"></div><div class="oval-label">Lumpirot</div></div>
+                <div class="item-card"><div class="item-frame"><img src="taming kalir.jpg"></div><div class="oval-label">Taming Kalir</div></div>
+                <div class="item-card"><div class="item-frame"><img src="himpogot.jpg"></div><div class="oval-label">Himpogot</div></div>
+                <div class="item-card"><div class="item-frame"><img src="babaru puputul.png"></div><div class="oval-label">Babaru Puputul</div></div>
+            <div class="item-card"><div class="item-frame"><img src="aba puputul.png"></div><div class="oval-label">Aba Puputul</div></div>
+            <div class="item-card"><div class="item-frame"><img src="tupi sinulatan.jpg"></div><div class="oval-label">Tupi Sinulatan</div></div>
+
+              </div>
+        </div>
+        <button class="arrow arrow-right" onclick="moveSlide('artifact-track', 1)">NEXT</button>
+    </div>
+
+    <h2 class="slider-section-label">VISUAL_JOURNEY</h2>
+    <div class="slider-area">
+        <button class="arrow arrow-left" onclick="moveSlide('video-track', -1)">PREV</button>
+        <div class="gallery-viewport">
+            <div class="gallery-track" id="video-track">
+    <div class="video-card">
+        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/w19dG9qzNzU" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <div class="video-card">
+        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/LDdPrmNAfcY" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <div class="video-card">
+        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/-g0vfoutz7U" frameborder="0" allowfullscreen></iframe>
+    </div>
+</div>
+        </div>
+        <button class="arrow arrow-right" onclick="moveSlide('video-track', 1)">NEXT</button>
+    </div>
+
+    <div class="bottom-area">
+        <a href="360 kadaza.html" style="text-decoration:none">
+            <button class="action-btn">view of 360</button>
+        </a>
+    </div>
+</main>
+
+<script>
+    /* CURSOR LOGIC */
+    const cursor = document.getElementById('custom-cursor');
+    const follower = document.getElementById('cursor-follower');
+    
+    document.addEventListener('mousemove', (e) => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+        setTimeout(() => {
+            follower.style.left = e.clientX + 'px';
+            follower.style.top = e.clientY + 'px';
+        }, 50);
+    });
+
+    /* THEME TOGGLE */
+    function toggleTheme() {
+        const root = document.documentElement;
+        root.setAttribute('data-theme', root.getAttribute('data-theme') === 'light' ? '' : 'light');
+    }
+
+    /* SLIDER LOGIC */
+    const indices = { 'artifact-track': 0, 'video-track': 0 };
+
+    function moveSlide(trackId, direction) {
+        const track = document.getElementById(trackId);
+        const cards = track.children;
+        const cardWidth = cards[0].offsetWidth + 20; // width + gap
+        const maxScroll = cards.length - 1;
+
+        indices[trackId] += direction;
+
+        if (indices[trackId] > maxScroll) indices[trackId] = 0;
+        if (indices[trackId] < 0) indices[trackId] = maxScroll;
+
+        track.style.transform = `translateX(${-indices[trackId] * cardWidth}px)`;
+    }
+
+    // Hover scales for cursor
+    document.querySelectorAll('a, button, .item-card, .video-card').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            follower.style.transform = 'translate(-50%, -50%) scale(1.8)';
+            follower.style.background = 'rgba(212, 175, 55, 0.1)';
+        });
+        el.addEventListener('mouseleave', () => {
+            follower.style.transform = 'translate(-50%, -50%) scale(1)';
+            follower.style.background = 'transparent';
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hub | Sabah Heritage Archive</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #080808;
+            --text-color: #ffffff;
+            --accent-color: #d4af37;
+            --nav-bg: #080808;
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --font-main: 'Space Mono', monospace;
+            --font-heading: 'Syncopate', sans-serif;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f9f7f2;
+            --text-color: #1a1a1a;
+            --accent-color: #8b6e3c;
+            --nav-bg: #f9f7f2;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.4s ease;
+        }
+
+        /* 1. UNIFIED NAVIGATION BAR */
+        .site-nav {
+            position: fixed; top: 0; width: 100%; height: 80px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 50px; background: var(--nav-bg); border-bottom: 1px solid var(--glass-border);
+            z-index: 5000;
+        }
+
+        .logo-box h1 { font-family: var(--font-heading); font-size: 14px; letter-spacing: 4px; }
+        
+        .nav-menu { display: flex; gap: 30px; list-style: none; }
+        .nav-menu a { 
+            color: var(--text-color); text-decoration: none; font-size: 11px; 
+            opacity: 0.6; transition: 0.3s; text-transform: uppercase; font-weight: 700;
+        }
+        .nav-menu a.active, .nav-menu a:hover { opacity: 1; color: var(--accent-color); }
+
+        .nav-right { display: flex; align-items: center; gap: 25px; }
+        #digital-clock { font-size: 12px; font-weight: 700; color: var(--accent-color); border-left: 1px solid var(--glass-border); padding-left: 20px; }
+
+        /* 2. GAME HUB INTERFACE */
+        .hub-viewport {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 100px 5vw 0;
+            z-index: 5;
+            position: relative;
+        }
+
+        .hub-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .hub-header h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.2rem, 3vw, 2rem);
+            letter-spacing: 12px;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+
+        .hub-header p {
+            font-size: 10px;
+            opacity: 0.5;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Technical Bento Grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            text-decoration: none;
+            color: var(--text-color);
+            position: relative;
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 350px;
+        }
+
+        /* Tactical Accents */
+        .card-glitch {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent-color);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: 0.4s;
+        }
+
+        .game-card:hover {
+            background: rgba(212, 175, 89, 0.05);
+            border-color: var(--accent-color);
+            transform: translateY(-10px);
+        }
+
+        .game-card:hover .card-glitch { transform: scaleX(1); }
+
+        .game-id {
+            font-size: 9px;
+            color: var(--accent-color);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .game-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            letter-spacing: 3px;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .game-desc {
+            font-size: 10px;
+            line-height: 1.8;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        .btn-start {
+            margin-top: 30px;
+            font-size: 9px;
+            letter-spacing: 4px;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: 0.3s;
+        }
+
+        .btn-start::after {
+            content: '→';
+            transition: 0.3s;
+        }
+
+        .game-card:hover .btn-start {
+            gap: 25px;
+        }
+
+        /* 3. BACKGROUND EFFECTS */
+        .grain {
+            position: fixed; inset: 0;
+            background: url('https://grainy-gradients.vercel.app/noise.svg');
+            opacity: 0.04; pointer-events: none; z-index: 100;
+        }
+
+        .grid-bg {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(var(--glass-border) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: 1; pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* 4. CURSOR SYSTEM */
+        #cursor { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; position: fixed; pointer-events: none; z-index: 6000; }
+        #cursor-follower { width: 40px; height: 40px; border: 1px solid var(--accent-color); border-radius: 50%; position: fixed; pointer-events: none; z-index: 5999; transition: 0.1s ease-out; }
+
+        @media (max-width: 1000px) {
+            .game-grid { grid-template-columns: 1fr; }
+            .hub-viewport { padding-top: 120px; overflow-y: auto; }
+            body { overflow-y: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div class="grain"></div>
+    <div class="grid-bg"></div>
+
+    <nav class="site-nav">
+        <div class="logo-box"><h1>SABAH_HUB</h1></div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="explore.html">Explore</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="game.html" class="active">Game</a></li>
+            <li><a href="about.html">About</a></li>
+        </ul>
+        <div class="nav-right">
+            <button onclick="toggleTheme()" style="background:none; border:1px solid var(--accent-color); color:var(--accent-color); padding:5px 15px; font-size:10px; cursor:pointer; font-family: var(--font-main);">MODE_SWAP</button>
+            <div id="digital-clock">00:00:00</div>
+        </div>
+    </nav>
+
+    <main class="hub-viewport">
+        <div class="hub-header">
+            <h1>CHOOSE_YOUR_QUEST</h1>
+            <p>Active Simulation: Cultural Heritage Restoration Protocols</p>
+        </div>
+
+        <div class="game-grid">
+            <a href="game 2.html" class="game-card">
+                <div class="card-glitch"></div>
+                <div>
+                    <div class="game-id">LOG_01 // COGNITIVE</div>
+                    <h3 class="game-title">HERITAGE<br>MATCH</h3>
+                    <p class="game-desc">Test visual memory. Synchronize ancestral symbols across Sabah's ethnic divisions.</p>
+                </div>
+                <div class="btn-start">INITIALIZE_QUEST</div>
+            </a>
+
+            <a href="game 3.html" class="game-card">
+                <div class="card-glitch"></div>
+                <div>
+                    <div class="game-id">LOG_02 // GEOMETRIC</div>
+                    <h3 class="game-title">WOVEN<br>ROOTS</h3>
+                    <p class="game-desc">Restore digital textile patterns. A meditative reconstruction of Kadazan geometric art.</p>
+                </div>
+                <div class="btn-start">INITIALIZE_QUEST</div>
+            </a>
+
+            <a href="game 4.html" class="game-card">
+                <div class="card-glitch"></div>
+                <div>
+                    <div class="game-id">LOG_03 // RESOURCE</div>
+                    <h3 class="game-title">SACRED<br>HARVEST</h3>
+                    <p class="game-desc">Real-time preservation simulation. Protect the land's bounty in the valleys of Ranau.</p>
+                </div>
+                <div class="btn-start">INITIALIZE_QUEST</div>
+            </a>
+        </div>
+    </main>
+
+    <script>
+        // CLOCK SYSTEM
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('digital-clock').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // THEME SYSTEM
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+
+        // CURSOR SYSTEM
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            follower.style.left = (e.clientX - 20) + 'px';
+            follower.style.top = (e.clientY - 20) + 'px';
+        });
+
+        // HOVER EFFECTS
+        document.querySelectorAll('.game-card, .nav-menu a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                follower.style.transform = 'scale(1.8)';
+                follower.style.background = 'rgba(212, 175, 55, 0.1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                follower.style.transform = 'scale(1)';
+                follower.style.background = 'transparent';
+            });
+        });
+    </script>
+</body>
+</html>

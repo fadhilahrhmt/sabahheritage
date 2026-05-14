@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SABAH HERITAGE // ARCHIVE_MATCH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 1. UNIFIED DESIGN SYSTEM */
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #ffffff;
+            --accent-gold: #d4af37;
+            --nav-bg: rgba(10, 10, 10, 0.9);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f2f2f2;
+            --text-color: #0a0a0a;
+            --nav-bg: rgba(242, 242, 242, 0.9);
+            --glass-bg: rgba(0, 0, 0, 0.05);
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none !important; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Space Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* 2. CURSOR */
+        #custom-cursor {
+            width: 10px; height: 10px;
+            background-color: var(--accent-gold);
+            border-radius: 50%;
+            position: fixed; pointer-events: none;
+            z-index: 99999; transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            mix-blend-mode: difference;
+        }
+
+        #cursor-follower {
+            width: 40px; height: 40px;
+            border: 1px solid var(--accent-gold);
+            border-radius: 50%;
+            position: fixed; pointer-events: none;
+            z-index: 99998; transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out, width 0.3s, height 0.3s;
+            opacity: 0.5;
+        }
+
+        /* 3. NAVIGATION */
+        .site-header {
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 60px;
+            border-bottom: 1px solid var(--glass-border);
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+
+        .main-nav { display: flex; gap: 5px; }
+        .nav-btn {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 10px 25px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            transition: 0.3s;
+            position: relative;
+        }
+        .nav-btn:hover, .nav-btn.active { color: var(--accent-gold); }
+        .nav-btn.active::after {
+            content: ''; position: absolute; bottom: 0; left: 25%; width: 50%; height: 1px; background: var(--accent-gold);
+        }
+
+        .mode-swap {
+            position: absolute; right: 60px;
+            font-size: 10px; letter-spacing: 2px;
+            color: var(--accent-gold); border: 1px solid var(--accent-gold);
+            padding: 5px 15px; transition: 0.3s;
+        }
+
+        /* 4. GAME LAYOUT */
+        .game-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
+            padding: 30px 60px;
+            max-height: calc(100vh - 90px);
+        }
+
+        .marks-board {
+            border-right: 1px solid var(--glass-border);
+            padding-right: 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .marks-board h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: var(--accent-gold);
+            margin-bottom: 30px;
+        }
+
+        .score-list { flex: 1; list-style: none; overflow-y: auto; }
+
+        .score-item {
+            display: flex; justify-content: space-between;
+            padding: 15px 0; border-bottom: 1px solid var(--glass-border);
+            font-size: 10px; opacity: 0.7;
+        }
+
+        /* 5. INTERACTIVE GRID */
+        .game-area { display: flex; flex-direction: column; }
+        .stats-bar { 
+            margin-bottom: 20px; font-size: 11px; 
+            letter-spacing: 2px; color: var(--accent-gold); 
+            text-transform: uppercase;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            height: 100%;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            position: relative; transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card.flipped { transform: rotateY(180deg); }
+
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+        }
+
+        .card-back { background: #111; }
+        .card-front {
+            background: #000; transform: rotateY(180deg);
+            border: 1px solid var(--accent-gold);
+            padding: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .card-front img { max-width: 85%; max-height: 85%; object-fit: contain; }
+
+        /* 6. SYSTEM OVERLAYS */
+        .overlay {
+            position: fixed; inset: 0; background: var(--bg-color);
+            display: flex; justify-content: center; align-items: center; z-index: 10000;
+        }
+
+        .panel {
+            text-align: center; max-width: 450px;
+            border: 1px solid var(--glass-border);
+            padding: 60px; background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn {
+            background: transparent; color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            padding: 12px 35px; font-size: 10px; letter-spacing: 4px;
+            text-transform: uppercase; font-family: 'Space Mono'; margin-top: 15px;
+            width: 100%; transition: 0.3s;
+        }
+
+        .action-btn:hover {
+            background: var(--accent-gold);
+            color: #000;
+        }
+
+        input {
+            background: transparent; border: none; border-bottom: 1px solid var(--accent-gold);
+            color: var(--text-color); padding: 10px; width: 100%; text-align: center;
+            font-family: 'Space Mono'; outline: none; margin-bottom: 20px; font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="custom-cursor"></div>
+<div id="cursor-follower"></div>
+
+<header class="site-header">
+    <nav class="main-nav">
+        <a href="index.html" class="nav-btn">Home</a>
+        <a href="explore.html" class="nav-btn">Explore</a>
+        <a href="gallery.html" class="nav-btn">Gallery</a>
+        <a href="game.html" class="nav-btn active">Game</a>
+        <a href="about.html" class="nav-btn">About</a>
+    </nav>
+    <div class="mode-swap" onclick="toggleTheme()">MODE_SWAP</div>
+</header>
+
+<div id="intro-overlay" class="overlay">
+    <div class="panel">
+        <h2 style="font-family: 'Cinzel'; letter-spacing: 5px; color: var(--accent-gold); margin-bottom: 20px;">HERITAGE_MATCH</h2>
+        <p style="font-size: 9px; line-height: 2; opacity: 0.6; text-transform: uppercase;">Sync the traditional data sets of North Borneo. Precision required.</p>
+        <button class="action-btn" onclick="startQuest()">INIT_SYSTEM</button>
+    </div>
+</div>
+
+<div id="win-overlay" class="overlay" style="display:none;">
+    <div class="panel">
+        <h2 id="win-title" style="font-family: 'Cinzel'; color: var(--accent-gold);">SYNC_SUCCESS</h2>
+        <p id="final-time" style="margin: 20px 0; font-size: 12px;"></p>
+        <div id="input-section">
+            <input type="text" id="player-name" placeholder="IDENT_NAME">
+            <button class="action-btn" onclick="saveScore()">SAVE_LOG</button>
+        </div>
+        <div id="post-game-btns" style="display:none;">
+            <button class="action-btn" onclick="startQuest()">RE_BOOT</button>
+        </div>
+    </div>
+</div>
+
+<div class="game-container">
+    <aside class="marks-board">
+        <h3>RECORDS_LOG</h3>
+        <ul class="score-list" id="leaderboard"></ul>
+        
+        <div class="board-actions" style="margin-top: 20px;">
+            <button class="action-btn" onclick="startQuest()" style="font-size: 8px; padding: 10px;">RELOAD_SESSION</button>
+            <a href="game.html" style="text-decoration: none;">
+                <button class="action-btn" style="font-size: 8px; padding: 10px;">MAIN_MENU</button>
+            </a>
+        </div>
+    </aside>
+
+    <main class="game-area">
+        <div class="stats-bar">
+            SYS_TIMER: <span id="timer">0.00</span>S // MATCHED: <span id="matches">0</span>/12
+        </div>
+        <div class="game-grid" id="grid"></div>
+    </main>
+</div>
+
+<script>
+    /* 1. CURSOR LOGIC */
+    const cursor = document.getElementById('custom-cursor');
+    const follower = document.getElementById('cursor-follower');
+    
+    document.addEventListener('mousemove', (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+        cursor.style.left = x + 'px';
+        cursor.style.top = y + 'px';
+        setTimeout(() => {
+            follower.style.left = x + 'px';
+            follower.style.top = y + 'px';
+        }, 50);
+    });
+
+    document.querySelectorAll('a, button, .card').forEach(el => {
+        el.addEventListener('mouseenter', () => {
+            follower.style.width = '60px';
+            follower.style.height = '60px';
+            cursor.style.backgroundColor = 'transparent';
+            cursor.style.border = '1px solid var(--accent-gold)';
+        });
+        el.addEventListener('mouseleave', () => {
+            follower.style.width = '40px';
+            follower.style.height = '40px';
+            cursor.style.backgroundColor = 'var(--accent-gold)';
+            cursor.style.border = 'none';
+        });
+    });
+
+    /* 2. MODE SWAP */
+    function toggleTheme() {
+        const root = document.documentElement;
+        if (root.getAttribute('data-theme') === 'light') {
+            root.removeAttribute('data-theme');
+        } else {
+            root.setAttribute('data-theme', 'light');
+        }
+    }
+
+    /* 3. GAME LOGIC */
+    const items = [
+        { n: 'sinuangga.png', i: 'sinuangga.png' }, { n: 'himpogot.png', i: 'himpogot.jpg' },
+        { n: 'gaung.png', i: 'gaung.png' }, { n: 'sigar.jpg', i: 'sigar.jpg' },
+        { n: 'badu simpak.png', i: 'badu simpak.png' }, { n: 'sinikot.jpg', i: 'sinikot.jpg' },
+        { n: 'tupi sinulatan.jpg', i: 'tupi sinulatan.jpg' }, { n: 'sarimpak.jpg', i: 'sarimpak.jpg' },
+        { n: 'pinongkoloh.jpg', i: 'pinongkoloh.jpg' }, { n: 'lumpirot.png', i: 'lumpirot.png' },
+        { n: 'badu sampit.jpg', i: 'badu sampit.jpg' }, { n: 'babaru puputul.png', i: 'babaru puputul.png' }
+    ];
+
+    let flipped = [], matched = 0, startTime, timerInt, active = false;
+
+    function startQuest() {
+        document.getElementById('intro-overlay').style.display = 'none';
+        document.getElementById('win-overlay').style.display = 'none';
+        document.getElementById('input-section').style.display = 'block';
+        document.getElementById('post-game-btns').style.display = 'none';
+
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        matched = 0;
+        document.getElementById('matches').innerText = "0";
+
+        let deck = [];
+        items.forEach(x => {
+            deck.push({ name: x.n, val: `<img src="${x.i}">` });
+            deck.push({ name: x.n, val: `<img src="${x.i}">` });
+        });
+        deck.sort(() => Math.random() - 0.5);
+
+        deck.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.name = item.name;
+            card.innerHTML = `<div class="card-back"></div><div class="card-front">${item.val}</div>`;
+            card.onclick = () => flip(card);
+            grid.appendChild(card);
+        });
+
+        startTime = Date.now();
+        active = true;
+        clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            document.getElementById('timer').innerText = ((Date.now() - startTime) / 1000).toFixed(2);
+        }, 50);
+    }
+
+    function flip(card) {
+        if (!active || flipped.length >= 2 || card.classList.contains('flipped')) return;
+        card.classList.add('flipped');
+        flipped.push(card);
+        if (flipped.length === 2) check();
+    }
+
+    function check() {
+        const [a, b] = flipped;
+        if (a.dataset.name === b.dataset.name) {
+            matched++;
+            document.getElementById('matches').innerText = matched;
+            flipped = [];
+            if (matched === 12) victory();
+        } else {
+            setTimeout(() => { a.classList.remove('flipped'); b.classList.remove('flipped'); flipped = []; }, 600);
+        }
+    }
+
+    function victory() {
+        active = false;
+        clearInterval(timerInt);
+        const finalTime = document.getElementById('timer').innerText;
+        document.getElementById('final-time').innerText = "RECORD_LOG: " + finalTime + "S";
+        document.getElementById('win-overlay').style.display = 'flex';
+    }
+
+    function saveScore() {
+        const name = document.getElementById('player-name').value || "ANON";
+        const time = parseFloat(document.getElementById('timer').innerText);
+        let scores = JSON.parse(localStorage.getItem('sabahQuest')) || [];
+        scores.push({ name, time });
+        scores.sort((a, b) => a.time - b.time);
+        localStorage.setItem('sabahQuest', JSON.stringify(scores.slice(0, 5)));
+        loadBoard();
+        document.getElementById('input-section').style.display = 'none';
+        document.getElementById('post-game-btns').style.display = 'block';
+    }
+
+    function loadBoard() {
+        const scores = JSON.parse(localStorage.getItem('sabahQuest')) || [];
+        document.getElementById('leaderboard').innerHTML = scores.map((s, i) => `
+            <li class="score-item">
+                <span>${i + 1}. ${s.name}</span>
+                <span>${s.time.toFixed(2)}s</span>
+            </li>`).join('') || '<li class="score-item">WAITING_FOR_DATA</li>';
+    }
+
+    loadBoard();
+</script>
+</body>
+</html>

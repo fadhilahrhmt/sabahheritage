@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery | Sabah Heritage Archive</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #080808;
+            --text-color: #ffffff;
+            --accent-color: #d4af37;
+            --nav-bg: #080808;
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --font-main: 'Space Mono', monospace;
+            --font-heading: 'Syncopate', sans-serif;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f9f7f2;
+            --text-color: #1a1a1a;
+            --accent-color: #8b6e3c;
+            --nav-bg: #f9f7f2;
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.4s ease;
+        }
+
+        /* NAVIGATION */
+        .site-nav {
+            position: fixed; top: 0; width: 100%; height: 80px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 50px; background: var(--nav-bg); border-bottom: 1px solid var(--glass-border);
+            z-index: 5000;
+        }
+
+        .logo-box h1 { font-family: var(--font-heading); font-size: 14px; letter-spacing: 4px; }
+        
+        .nav-menu { display: flex; gap: 30px; list-style: none; }
+        .nav-menu a { 
+            color: var(--text-color); text-decoration: none; font-size: 11px; 
+            opacity: 0.6; transition: 0.3s; text-transform: uppercase; font-weight: 700;
+        }
+        .nav-menu a.active, .nav-menu a:hover { opacity: 1; color: var(--accent-color); }
+
+        .nav-right { display: flex; align-items: center; gap: 25px; }
+        #digital-clock { font-size: 12px; font-weight: 700; color: var(--accent-color); border-left: 1px solid var(--glass-border); padding-left: 20px; }
+
+        /* GALLERY INTRO */
+        .gallery-intro {
+            text-align: center;
+            padding: 160px 20px 60px;
+        }
+        .gallery-intro h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+        .gallery-intro p {
+            font-size: 10px;
+            letter-spacing: 3px;
+            opacity: 0.5;
+            text-transform: uppercase;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* GALLERY GRID */
+        .gallery-container {
+            max-width: 1400px;
+            margin: 0 auto 100px;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            z-index: 5;
+        }
+
+        .gallery-item {
+            position: relative;
+            background: #000;
+            overflow: hidden;
+            aspect-ratio: 16 / 10;
+            border: 1px solid var(--glass-border);
+            transition: border-color 0.4s;
+            text-decoration: none;
+        }
+
+        .gallery-item:hover { border-color: var(--accent-color); }
+
+        .img-wrapper {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            overflow: hidden; /* Critical for panning effect */
+        }
+
+        /* HORIZONTAL PANNING EFFECT */
+        .zone-img {
+            width: 120%; /* Image is wider than container to allow panning */
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.5;
+            filter: grayscale(100%);
+            transform: translateX(-10%);
+            transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s, filter 0.6s;
+        }
+
+        /* On hover: Slide image slightly right and scale up */
+        .gallery-item:hover .zone-img {
+            transform: translateX(0%) scale(1.1); 
+            opacity: 0.9;
+            filter: grayscale(0%);
+        }
+
+        .item-overlay {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            justify-content: flex-end; padding: 25px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%);
+            z-index: 10;
+        }
+
+        .item-overlay span { color: var(--accent-color); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        .item-overlay h2 { font-family: var(--font-heading); color: #fff; font-size: 14px; letter-spacing: 2px; }
+
+        /* UI ELEMENTS */
+        .grid-bg {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(var(--glass-border) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+            background-size: 60px 60px; z-index: -1; pointer-events: none;
+            opacity: 0.3;
+        }
+
+        #cursor { width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; position: fixed; pointer-events: none; z-index: 6000; }
+        #cursor-follower { width: 40px; height: 40px; border: 1px solid var(--accent-color); border-radius: 50%; position: fixed; pointer-events: none; z-index: 5999; transition: 0.1s ease-out; }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div class="grid-bg"></div>
+
+    <nav class="site-nav">
+        <div class="logo-box"><h1>SABAH_HERITAGE</h1></div>
+        <ul class="nav-menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="explore.html">Explore</a></li>
+            <li><a href="gallery.html" class="active">Gallery</a></li>
+            <li><a href="game.html">Game</a></li>
+            <li><a href="about.html">About</a></li>
+        </ul>
+        <div class="nav-right">
+            <button onclick="toggleTheme()" style="background:none; border:1px solid var(--accent-color); color:var(--accent-color); padding:5px 15px; font-size:10px; cursor:pointer; font-family: var(--font-main);">MODE_SWAP</button>
+            <div id="digital-clock">00:00:00</div>
+        </div>
+    </nav>
+
+    <div class="gallery-intro">
+        <h1>REGIONAL_DATA_LOG</h1>
+        <p>Tactical visual records of Sabah's 5 demographic zones. Hover to scan.</p>
+    </div>
+
+    <div class="gallery-container">
+        <a href="kadazan.html" class="gallery-item">
+            <div class="img-wrapper">
+                <img src="https://sabah.gov.my/sites/default/files/inline-images/traditional-attire-people.jpg" class="zone-img" alt="West Coast">
+            </div>
+            <div class="item-overlay">
+                <span>ZONE_01 // KADAZAN-DUSUN</span>
+                <h2>WEST COAST ZONE</h2>
+            </div>
+        </a>
+
+        <a href="murut.html" class="gallery-item">
+            <div class="img-wrapper">
+                <img src="https://www.mysabah.com/wordpress/wp-content/uploads/2009/04/Murut-Kalimaran-Festival.jpg" class="zone-img" alt="Interior">
+            </div>
+            <div class="item-overlay">
+                <span>ZONE_02 // MURUT</span>
+                <h2>INTERIOR ZONE</h2>
+            </div>
+        </a>
+
+        <a href="bajau.html" class="gallery-item">
+            <div class="img-wrapper">
+                <img src="https://media-perpaduan.com/wp-content/uploads/2023/11/img_1139-2-1.jpg" class="zone-img" alt="East Coast">
+            </div>
+            <div class="item-overlay">
+                <span>ZONE_03 // BAJAU</span>
+                <h2>EAST COAST ZONE</h2>
+            </div>
+        </a>
+
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('digital-clock').innerText = now.toLocaleTimeString('en-GB', { hour12: false });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            follower.style.left = (e.clientX - 20) + 'px';
+            follower.style.top = (e.clientY - 20) + 'px';
+        });
+
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.addEventListener('mouseenter', () => follower.style.transform = 'scale(1.5)');
+            item.addEventListener('mouseleave', () => follower.style.transform = 'scale(1)');
+        });
+    </script>
+</body>
+</html>
+          
