@@ -126,8 +126,9 @@
       color: var(--accent);
       padding: 8px 12px;
       font-family: var(--font-main);
-      font-size: 11px;
+      font-size: 14px;
       letter-spacing: 1px;
+      line-height: 1;
     }
 
     /* --- WARDROBE HORIZONTAL SLIDER --- */
@@ -294,6 +295,8 @@
     #realModelCanvas { width: 100% !important; height: 100% !important; display: block; pointer-events: auto;}
     .status-overlay { position: absolute; bottom: 15px; left: 15px; font-size: 0.55rem; color: var(--accent); }
 
+    .mobile-gear-preview-wrapper { display: none; }
+
     /* --- MOBILE RESPONSIVE ADAPTATION (BAJAU360 FLOW SYNC) --- */
     @media (max-width: 1024px) {
       .site-nav { padding: 0 25px; height: 70px; }
@@ -316,8 +319,9 @@
       .nav-menu li { width: 100%; text-align: center; }
       .nav-menu a { display: block; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
       
-      /* Hide Header Controls on Small Displays to Reduce Top Noise */
-      .site-nav .mode-swap, #digital-clock { display: none !important; }
+      /* Mode Swap and Menu Switcher active side-by-side inside mobile nav box header */
+      .site-nav .nav-right .mode-swap { display: block !important; padding: 6px 10px; font-size: 9px; }
+      #digital-clock { display: none !important; }
 
       /* Cascaded Card Blueprint Mapping */
       .viewer-container { 
@@ -327,14 +331,23 @@
         gap: 20px;
       }
 
+      /* Isolated Mobile Gear Preview elements locked cleanly on top */
+      .mobile-gear-preview-wrapper {
+        display: block;
+        order: 1;
+      }
+
       .model-stage {
-        order: 1; /* Main canvas viewport locked to top */
+        order: 2; /* Main interactive stage layout positioned right below top slider */
         min-height: 380px;
         height: 50vh;
       }
 
-      .viewer-container > aside:nth-of-type(1) { order: 2; } /* Configuration controls */
-      .viewer-container > aside:nth-of-type(2) { order: 3; } /* Informational analytics */
+      .viewer-container > aside:nth-of-type(1) { order: 3; } /* Configuration control elements */
+      .viewer-container > aside:nth-of-type(2) { order: 4; } /* Informational card analytics */
+
+      /* Hide native desktop layout alignment context inside panel nodes */
+      aside.panel .desktop-gear-context { display: none !important; }
 
       .panel {
         padding: 15px;
@@ -344,7 +357,7 @@
       }
 
       .mobile-mode-box {
-        display: block;
+        display: none; /* Completely swept out sidebar theme buttons */
       }
 
       .hud-frame { inset: 8px; }
@@ -370,25 +383,31 @@
     </ul>
     <div class="nav-right">
         <button onclick="toggleTheme()" class="mode-swap" data-glitch="MODE_SWAP">MODE_SWAP</button>
-        <button class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggleBtn">MENU</button>
+        <button class="menu-toggle" onclick="toggleMobileMenu()" id="menuToggleBtn">☰</button>
         <div id="digital-clock">00:00:00</div>
     </div>
   </nav>
 
   <main class="viewer-container">
+    
+    <div class="mobile-gear-preview-wrapper panel">
+      <div class="panel-header" data-glitch="GEAR_PREVIEW">GEAR_PREVIEW</div>
+      <div class="wardrobe-scroll-container">
+        <div id="wardrobeTrackMobile" class="wardrobe-track"></div>
+      </div>
+    </div>
+
     <aside class="panel">
       <div>
         <div class="panel-header" data-glitch="NODE_SELECTION">NODE_SELECTION</div>
         <button id="loadFemale" class="terminal-btn active" data-glitch="[ KADAZAN_FEMALE ]">[ KADAZAN_FEMALE ]</button>
         <button id="loadMale" class="terminal-btn" data-glitch="[ KADAZAN_MALE ]">[ KADAZAN_MALE ]</button>
         
-        <div class="mobile-mode-box">
-          <button onclick="toggleTheme()" class="terminal-btn" style="border-color: var(--accent); color: var(--accent);" data-glitch="TOGGLE_THEME">TOGGLE_THEME</button>
-        </div>
-
-        <div class="panel-header" style="margin-top:25px;" data-glitch="GEAR_PREVIEW">GEAR_PREVIEW</div>
-        <div class="wardrobe-scroll-container">
-          <div id="wardrobeTrack" class="wardrobe-track"></div>
+        <div class="desktop-gear-context">
+          <div class="panel-header" style="margin-top:25px;" data-glitch="GEAR_PREVIEW">GEAR_PREVIEW</div>
+          <div class="wardrobe-scroll-container">
+            <div id="wardrobeTrack" class="wardrobe-track"></div>
+          </div>
         </div>
       </div>
     </aside>
@@ -434,9 +453,9 @@
         const btn = document.getElementById('menuToggleBtn');
         menu.classList.toggle('mobile-active');
         if(menu.classList.contains('mobile-active')) {
-          btn.innerText = "CLOSE";
+          btn.innerText = "✕";
         } else {
-          btn.innerText = "MENU";
+          btn.innerText = "☰";
         }
     }
   </script>
@@ -461,37 +480,49 @@
     };
 
     const wardrobeTrack = document.getElementById('wardrobeTrack');
+    const wardrobeTrackMobile = document.getElementById('wardrobeTrackMobile');
 
     function updateWardrobeDisplay(gender) {
+      // Clear Desktop Target
       wardrobeTrack.innerHTML = '';
       wardrobeTrack.style.animation = 'none';
       wardrobeTrack.offsetHeight; 
       wardrobeTrack.style.animation = 'gearSwipe 10s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate';
 
-      costumeData[gender].forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'wardrobe-item';
-        div.innerHTML = `
-          <img src="${item.img}" alt="${item.name}">
-          <div class="wardrobe-label">${item.name}</div>
-        `;
-        
-        div.addEventListener('mouseenter', () => {
-          const follower = document.getElementById('cursor-follower');
-          if(follower) {
-            follower.style.transform = 'scale(1.3)';
-            follower.style.borderColor = 'var(--text-main)';
-          }
-        });
-        div.addEventListener('mouseleave', () => {
-          const follower = document.getElementById('cursor-follower');
-          if(follower) {
-            follower.style.transform = 'scale(1)';
-            follower.style.borderColor = 'var(--accent)';
-          }
-        });
+      // Clear Mobile Target
+      wardrobeTrackMobile.innerHTML = '';
+      wardrobeTrackMobile.style.animation = 'none';
+      wardrobeTrackMobile.offsetHeight; 
+      wardrobeTrackMobile.style.animation = 'gearSwipe 10s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate';
 
-        wardrobeTrack.appendChild(div);
+      costumeData[gender].forEach(item => {
+        const createItemNode = () => {
+          const div = document.createElement('div');
+          div.className = 'wardrobe-item';
+          div.innerHTML = `
+            <img src="${item.img}" alt="${item.name}">
+            <div class="wardrobe-label">${item.name}</div>
+          `;
+          
+          div.addEventListener('mouseenter', () => {
+            const follower = document.getElementById('cursor-follower');
+            if(follower) {
+              follower.style.transform = 'scale(1.3)';
+              follower.style.borderColor = 'var(--text-main)';
+            }
+          });
+          div.addEventListener('mouseleave', () => {
+            const follower = document.getElementById('cursor-follower');
+            if(follower) {
+              follower.style.transform = 'scale(1)';
+              follower.style.borderColor = 'var(--accent)';
+            }
+          });
+          return div;
+        };
+
+        wardrobeTrack.appendChild(createItemNode());
+        wardrobeTrackMobile.appendChild(createItemNode());
       });
     }
 
